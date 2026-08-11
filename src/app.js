@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
+const notFound = require('./middleware/notFound');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -18,16 +20,11 @@ app.use('/products', productRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// 404 handler - must come after all routes
+app.use(notFound);
 
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found.' });
-});
-
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error.' });
-});
+// Central error handler - must be the LAST app.use()
+app.use(errorHandler);
 
 const connectDB = async () => {
   await mongoose.connect(process.env.MONGO_URI);
